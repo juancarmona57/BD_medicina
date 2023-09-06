@@ -1,7 +1,7 @@
-from recursos_humanos import Persona as RecursosHumanos
-from enfermeras import Enfermera
+from recursos_humanos import main as rh_main
+from enfermeras import main as enfermera_main
 from medico import Medico
-from personal_administrativo import RegistroPacientes, Factura
+from personal_administrativo import main as pa_main
 
 def menu_principal():
     while True:
@@ -15,18 +15,14 @@ def menu_principal():
         opcion = input("Seleccione un rol: ")
 
         if opcion == "1":
-            rh = RecursosHumanos()
-            rh.main()
+            rh_main()
         elif opcion == "2":
-            enfermera_handler = Enfermera()
-            enfermera_handler.menu_principal()
+            enfermera_main()
         elif opcion == "3":
             medico_handler = Medico()
             medico_handler.menu_principal()
         elif opcion == "4":
-            personal_admin_handler = RegistroPacientes()
-            factura_handler = Factura(personal_admin_handler.base_datos)
-            personal_admin_handler.main()  # Aquí podría haber un menú específico para el Personal Administrativo si se desea.
+            pa_main() # Aquí podría haber un menú específico para el Personal Administrativo si se desea.
         elif opcion == "5":
             print("¡Hasta luego!")
             break
