@@ -1,107 +1,107 @@
-import pyodbc
+# Listas de almacenamiento
+historias_clinicas = []
+ordenes_medicamentos = []
+ordenes_procedimientos = []
 
-class Medico:
-    def __init__(self):
-        # Conexión a la base de datos
-        self.conn = self.conectar_sql_server()
-        self.cursor = self.conn.cursor()
-        self.crear_tablas()
+def registrar_historia_clinica():
+    cedula_paciente = input("Ingrese cédula del paciente: ")
+    historia = input("Ingrese la historia clínica: ")
+    historias_clinicas.append({
+        "cedula_paciente": cedula_paciente,
+        "historia": historia
+    })
+    print("Historia clínica registrada exitosamente.")
 
-    def conectar_sql_server(self):
-        # Datos de conexión a tu base de datos
-        server = 'NOMBRE_DEL_SERVIDOR'
-        database = 'NOMBRE_DE_LA_BASE_DE_DATOS'
-        username = 'USUARIO'
-        password = 'CONTRASEÑA'
-        driver = '{ODBC Driver 17 for SQL Server}'
+def prescribir_medicamento():
+    global ordenes_medicamentos
 
-        # Establece la conexión
-        return pyodbc.connect(f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}')
+    cedula_paciente = input("Ingrese cédula del paciente: ")
+    cedula_medico = input("Ingrese su cédula: ")
+    fecha = input("Fecha de prescripción (DD/MM/YYYY): ")
 
-    def crear_tablas(self):
-        # Creación de tablas si no existen
-        self.cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ordenes' AND xtype='U')
-        CREATE TABLE ordenes (
-            numero_orden INT PRIMARY KEY,
-            cedula_paciente VARCHAR(10),
-            cedula_medico VARCHAR(10),
-            fecha_creacion DATE,
-            tipo_orden VARCHAR(50)
-        )
-        """)
+    medicamentos = []
+    num_medicamentos = int(input("¿Cuántos medicamentos va a prescribir? "))
+    for _ in range(num_medicamentos):
+        nombre = input("Nombre del medicamento: ")
+        dosis = input("Dosis: ")
+        duracion = input("Duración: ")
+        medicamentos.append({
+            "nombre": nombre,
+            "dosis": dosis,
+            "duracion": duracion
+        })
 
-        self.cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ordenes_medicamentos' AND xtype='U')
-        CREATE TABLE ordenes_medicamentos (
-            numero_orden INT,
-            numero_item INT,
-            medicamento VARCHAR(100),
-            dosis VARCHAR(50),
-            duracion VARCHAR(50),
-            costo FLOAT,
-            PRIMARY KEY (numero_orden, numero_item)
-        )
-        """)
+    registrar_orden_medicamento(cedula_paciente, cedula_medico, fecha, medicamentos)
 
-        self.cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ordenes_procedimientos' AND xtype='U')
-        CREATE TABLE ordenes_procedimientos (
-            numero_orden INT,
-            numero_item INT,
-            procedimiento VARCHAR(100),
-            veces_repite INT,
-            frecuencia_repite VARCHAR(50),
-            costo FLOAT,
-            requiere_especialista BIT,
-            PRIMARY KEY (numero_orden, numero_item)
-        )
-        """)
+def solicitar_procedimiento():
+    global ordenes_procedimientos
 
-        self.conn.commit()
+    cedula_paciente = input("Ingrese cédula del paciente: ")
+    cedula_medico = input("Ingrese su cédula: ")
+    fecha = input("Fecha de solicitud (DD/MM/YYYY): ")
 
-    def registrar_orden_medicamento(self, cedula_paciente, cedula_medico, fecha, medicamentos):
-        self.cursor.execute("INSERT INTO ordenes (cedula_paciente, cedula_medico, fecha_creacion, tipo_orden) VALUES (?, ?, ?, 'medicamento')", (cedula_paciente, cedula_medico, fecha))
-        numero_orden = self.cursor.lastrowid
-        for medicamento in medicamentos:
-            self.cursor.execute("INSERT INTO ordenes_medicamentos (numero_orden, medicamento, dosis, duracion, costo) VALUES (?, ?, ?, ?, ?)", (numero_orden, medicamento['nombre'], medicamento['dosis'], medicamento['duracion'], medicamento['costo']))
-        self.conn.commit()
+    procedimientos = []
+    num_procedimientos = int(input("¿Cuántos procedimientos va a solicitar? "))
+    for _ in range(num_procedimientos):
+        nombre = input("Nombre del procedimiento: ")
+        veces = int(input("Número de veces que se repetirá: "))
+        frecuencia = input("Frecuencia de repetición: ")
+        procedimientos.append({
+            "nombre": nombre,
+            "veces": veces,
+            "frecuencia": frecuencia
+        })
 
-    def registrar_orden_procedimiento(self, cedula_paciente, cedula_medico, fecha, procedimientos):
-        self.cursor.execute("INSERT INTO ordenes (cedula_paciente, cedula_medico, fecha_creacion, tipo_orden) VALUES (?, ?, ?, 'procedimiento')", (cedula_paciente, cedula_medico, fecha))
-        numero_orden = self.cursor.lastrowid
-        for procedimiento in procedimientos:
-            self.cursor.execute("INSERT INTO ordenes_procedimientos (numero_orden, procedimiento, veces_repite, frecuencia_repite, costo, requiere_especialista) VALUES (?, ?, ?, ?, ?, ?)", (numero_orden, procedimiento['nombre'], procedimiento['veces'], procedimiento['frecuencia'], procedimiento['costo'], procedimiento['especialista']))
-        self.conn.commit()
+    registrar_orden_procedimiento(cedula_paciente, cedula_medico, fecha, procedimientos)
 
-    def menu_principal(self):
-        while True:
-            print("Sistema Médico")
-            print("1. Registrar historia clínica")
-            print("2. Prescribir medicamentos")
-            print("3. Solicitar procedimientos")
-            print("4. Salir")
+def registrar_orden_medicamento(cedula_paciente, cedula_medico, fecha, medicamentos):
+    global ordenes_medicamentos
 
-            opcion = input("Seleccione una opción: ")
+    numero_orden = len(ordenes_medicamentos) + 1
+    orden = {
+        "numero_orden": numero_orden,
+        "cedula_paciente": cedula_paciente,
+        "cedula_medico": cedula_medico,
+        "fecha_creacion": fecha,
+        "medicamentos": medicamentos
+    }
+    ordenes_medicamentos.append(orden)
+    print("Orden de medicamento registrada exitosamente.")
 
-            if opcion == "1":
-                # Aquí iría el código para registrar historia clínica
-                pass
-            elif opcion == "2":
-                # Aquí iría el código para prescribir medicamentos
-                pass
-            elif opcion == "3":
-                # Aquí iría el código para solicitar procedimientos
-                pass
-            elif opcion == "4":
-                print("¡Hasta luego!")
-                break
-            else:
-                print("Opción inválida. Por favor, elija una opción válida.")
+def registrar_orden_procedimiento(cedula_paciente, cedula_medico, fecha, procedimientos):
+    global ordenes_procedimientos
 
-    def __del__(self):
-        self.conn.close()
+    numero_orden = len(ordenes_procedimientos) + 1
+    orden = {
+        "numero_orden": numero_orden,
+        "cedula_paciente": cedula_paciente,
+        "cedula_medico": cedula_medico,
+        "fecha_creacion": fecha,
+        "procedimientos": procedimientos
+    }
+    ordenes_procedimientos.append(orden)
+    print("Orden de procedimiento registrada exitosamente.")
 
-if __name__ == "__main__":
-    medico_handler = Medico()
-    medico_handler.menu_principal()
+def menu_medico():
+    global personas
+    while True:
+        print("Sistema Médico")
+        print("1. Registrar historia clínica")
+        print("2. Prescribir medicamentos")
+        print("3. Solicitar procedimientos")
+        print("4. Salir")
+
+        opcion = input("Seleccione una opción: ")
+
+        if opcion == "1":
+            registrar_historia_clinica()
+        elif opcion == "2":
+            prescribir_medicamento()
+        elif opcion == "3":
+            solicitar_procedimiento()
+        elif opcion == "4":
+            print("¡Hasta luego!")
+            break
+        else:
+            print("Opción inválida. Por favor, elija una opción válida.")
+
