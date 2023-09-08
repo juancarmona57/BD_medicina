@@ -1,107 +1,57 @@
-# Listas de almacenamiento
-historias_clinicas = []
-ordenes_medicamentos = []
-ordenes_procedimientos = []
+# Suponiendo que esta parte del código está en un archivo llamado "medico.py"
+
+# Importamos la lista de personas del archivo de recursos humanos y pacientes de personal administrativo
+from recursos_humanos import personas
+from personal_administrativo import pacientes
+
+historia_clinica_db = {}  # Este diccionario simulará nuestra base de datos NoSQL.
+
+def medico_existe(cedula):
+    for persona in personas:
+        if persona['cedula'] == cedula and persona['rol'] == 'medico':
+            return True
+    return False
+
+def paciente_existe(cedula):
+    return cedula in [paciente['cedula'] for paciente in pacientes]
 
 def registrar_historia_clinica():
-    cedula_paciente = input("Ingrese cédula del paciente: ")
-    historia = input("Ingrese la historia clínica: ")
-    historias_clinicas.append({
-        "cedula_paciente": cedula_paciente,
-        "historia": historia
-    })
-    print("Historia clínica registrada exitosamente.")
+    print("----- Registro de Historia Clínica -----")
 
-def prescribir_medicamento():
-    global ordenes_medicamentos
+    cedula_paciente = input("Cédula del paciente: ")
 
-    cedula_paciente = input("Ingrese cédula del paciente: ")
-    cedula_medico = input("Ingrese su cédula: ")
-    fecha = input("Fecha de prescripción (DD/MM/YYYY): ")
+    # Verificar si el paciente existe
+    while not paciente_existe(cedula_paciente):
+        print("La cédula ingresada no corresponde a un paciente registrado.")
+        cedula_paciente = input("Cédula del paciente: ")
 
-    medicamentos = []
-    num_medicamentos = int(input("¿Cuántos medicamentos va a prescribir? "))
-    for _ in range(num_medicamentos):
-        nombre = input("Nombre del medicamento: ")
-        dosis = input("Dosis: ")
-        duracion = input("Duración: ")
-        medicamentos.append({
-            "nombre": nombre,
-            "dosis": dosis,
-            "duracion": duracion
-        })
+    # Si la cédula del paciente no existe en la base de historia clínica, se crea una nueva entrada para él.
+    if cedula_paciente not in historia_clinica_db:
+        historia_clinica_db[cedula_paciente] = {}
 
-    registrar_orden_medicamento(cedula_paciente, cedula_medico, fecha, medicamentos)
+    fecha_atencion = input("Fecha de atención (DD/MM/YYYY): ")
 
-def solicitar_procedimiento():
-    global ordenes_procedimientos
+    cedula_medico = input("Cédula del médico que lo atendió (10 dígitos máx.): ")
+    while len(cedula_medico) > 10 or not medico_existe(cedula_medico):
+        print("Verifique que la cédula tenga 10 dígitos y corresponda a un médico registrado.")
+        cedula_medico = input("Cédula del médico que lo atendió (10 dígitos máx.): ")
 
-    cedula_paciente = input("Ingrese cédula del paciente: ")
-    cedula_medico = input("Ingrese su cédula: ")
-    fecha = input("Fecha de solicitud (DD/MM/YYYY): ")
+    motivo_consulta = input("Motivo de la consulta: ")
+    sintomatologia = input("Sintomatología: ")
+    diagnostico = input("Diagnóstico: ")
 
-    procedimientos = []
-    num_procedimientos = int(input("¿Cuántos procedimientos va a solicitar? "))
-    for _ in range(num_procedimientos):
-        nombre = input("Nombre del procedimiento: ")
-        veces = int(input("Número de veces que se repetirá: "))
-        frecuencia = input("Frecuencia de repetición: ")
-        procedimientos.append({
-            "nombre": nombre,
-            "veces": veces,
-            "frecuencia": frecuencia
-        })
-
-    registrar_orden_procedimiento(cedula_paciente, cedula_medico, fecha, procedimientos)
-
-def registrar_orden_medicamento(cedula_paciente, cedula_medico, fecha, medicamentos):
-    global ordenes_medicamentos
-
-    numero_orden = len(ordenes_medicamentos) + 1
-    orden = {
-        "numero_orden": numero_orden,
-        "cedula_paciente": cedula_paciente,
+    # Se crea el registro de la consulta
+    registro_consulta = {
         "cedula_medico": cedula_medico,
-        "fecha_creacion": fecha,
-        "medicamentos": medicamentos
+        "motivo_consulta": motivo_consulta,
+        "sintomatologia": sintomatologia,
+        "diagnostico": diagnostico
     }
-    ordenes_medicamentos.append(orden)
-    print("Orden de medicamento registrada exitosamente.")
 
-def registrar_orden_procedimiento(cedula_paciente, cedula_medico, fecha, procedimientos):
-    global ordenes_procedimientos
+    # Se añade el registro a la historia clínica del paciente bajo la fecha de atención.
+    historia_clinica_db[cedula_paciente][fecha_atencion] = registro_consulta
+    print("Historial clínico actualizado con éxito!")
 
-    numero_orden = len(ordenes_procedimientos) + 1
-    orden = {
-        "numero_orden": numero_orden,
-        "cedula_paciente": cedula_paciente,
-        "cedula_medico": cedula_medico,
-        "fecha_creacion": fecha,
-        "procedimientos": procedimientos
-    }
-    ordenes_procedimientos.append(orden)
-    print("Orden de procedimiento registrada exitosamente.")
+# El resto del código sigue igual
 
-def menu_medico():
-    global personas
-    while True:
-        print("Sistema Médico")
-        print("1. Registrar historia clínica")
-        print("2. Prescribir medicamentos")
-        print("3. Solicitar procedimientos")
-        print("4. Salir")
-
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            registrar_historia_clinica()
-        elif opcion == "2":
-            prescribir_medicamento()
-        elif opcion == "3":
-            solicitar_procedimiento()
-        elif opcion == "4":
-            print("¡Hasta luego!")
-            break
-        else:
-            print("Opción inválida. Por favor, elija una opción válida.")
 
