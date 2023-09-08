@@ -1,5 +1,9 @@
 import re
 from datetime import datetime
+import medico as me
+
+COPAGO = 50000
+LIMITE_COPAGO = 1000000
 
 def validar_fecha(fecha):
     try:
@@ -80,7 +84,64 @@ def agendar_cita(pacientes):
     }
 
     return nueva_cita
+def obtener_info_paciente(cedula_paciente, lista_pacientes):
+    # Retorna la información del paciente basada en su cédula
+    return next((paciente for paciente in lista_pacientes if paciente["cedula"] == cedula_paciente), None)
 
+
+def obtener_historia_clinica(cedula_paciente):
+    # Esta función retorna la historia clínica basada en la cédula del paciente
+    return me.historia_clinica_db.get(cedula_paciente, {})
+
+def generar_factura(cedula_paciente):
+    paciente = obtener_info_paciente(cedula_paciente)
+    historia = obtener_historia_clinica(cedula_paciente)
+    if not paciente or not historia:
+        print("No se encontró información del paciente o su historia clínica.")
+        return
+
+    print("\n------- Facturación -------")
+    print(f"Nombre del paciente: {paciente['nombre']}")
+    print(f"Edad: {paciente['edad']}")
+    print(f"Cédula: {cedula_paciente}")
+    # Tomando la última consulta del paciente como referencia
+    ultima_consulta = list(historia.values())[-1]
+    print(f"Nombre del médico tratante: {ultima_consulta['cedula_medico']}")  # Aquí deberíamos traducir la cédula a nombre usando un DB adecuado
+    print(f"Nombre de la compañía de seguro: {paciente['compania_seguro']}")
+    print(f"Numero de póliza: {paciente['numero_poliza']}")
+    print(f"Vigencia de la póliza: {'Activa' if paciente['poliza_activa'] else 'Inactiva'}")
+
+    # Calcular y desglosar costos
+    total = 0
+    for orden in me.ordenes_db:
+        if orden["cedula_paciente"] == cedula_paciente:
+            if orden["tipo_orden"] == "medicamentos":
+                for med in me.ordenes_medicamento_db:
+                    if med["numero_orden"] == orden["numero_orden"]:
+                        print(f"Medicamento: {med['nombre_medicamento']} - Costo: ${med['costo']} - Dosis: {med['dosis']}")
+                        total += int(med["costo"])
+            elif orden["tipo_orden"] == "procedimientos":
+                for proc in me.ordenes_procedimiento_db:
+                    if proc["numero_orden"] == orden["numero_orden"]:
+                        print(f"Procedimiento: {proc['nombre_procedimiento']} - Costo: ${proc['costo']}")
+                        total += int(proc["costo"])
+            # Agregar condición para ayuda diagnóstica si se implementa
+
+    if paciente['poliza_activa']:
+        total_copagos = COPAGO * len(historia)
+        if total_copagos <= LIMITE_COPAGO:
+            print(f"\nTotal a pagar por el paciente (Copago): ${COPAGO}")
+            print(f"Total a pagar por la aseguradora: ${total - COPAGO}")
+        else:
+            print(f"\nTotal a pagar por el paciente (Copago): $0 (Límite de copago alcanzado)")
+            print(f"Total a pagar por la aseguradora: ${total}")
+    else:
+        print(f"\nTotal a pagar por el paciente: ${total}")
+
+    print("-----------------------------")
+
+# Para probar la función, puedes llamar:
+# generar_factura('cedula_del_paciente')
 
 
 def menu_administrativo():
@@ -105,11 +166,14 @@ def menu_administrativo():
             if cita:
                 citas.append(cita)
                 print("¡Cita agendada exitosamente!")
+
         elif opcion == "3":
-            factura = registrar_factura(pacientes)
+            cedula_paciente = input("Ingrese la cédula del paciente para generar la factura: ")
+            factura = generar_factura(cedula_paciente)
             if factura:
                 facturas.append(factura)
                 print("\n¡Factura registrada exitosamente!")
+
         elif opcion == "4":
             print("¡Hasta luego!")
             break
