@@ -4,6 +4,7 @@ import medico as me
 
 COPAGO = 50000
 LIMITE_COPAGO = 1000000
+pacientes = []
 
 def validar_fecha(fecha):
     try:
@@ -11,6 +12,14 @@ def validar_fecha(fecha):
         return True
     except ValueError:
         return False
+    
+
+def calcular_edad(fecha_nacimiento_str):
+    fecha_nacimiento = datetime.strptime(fecha_nacimiento_str, '%d/%m/%Y')
+    fecha_actual = datetime.now()
+    edad = fecha_actual.year - fecha_nacimiento.year - ((fecha_actual.month, fecha_actual.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
+
+    return edad
 
 def registrar_paciente():
     print("----- Datos Personales del Paciente -----")
@@ -58,6 +67,8 @@ def registrar_paciente():
         "estado_poliza": estado_poliza
     }
 
+    pacientes.append(paciente)
+
     return paciente
 
 def agendar_cita(pacientes):
@@ -94,7 +105,7 @@ def obtener_historia_clinica(cedula_paciente):
     return me.historia_clinica_db.get(cedula_paciente, {})
 
 def generar_factura(cedula_paciente):
-    paciente = obtener_info_paciente(cedula_paciente)
+    paciente = obtener_info_paciente(cedula_paciente, pacientes)
     historia = obtener_historia_clinica(cedula_paciente)
     if not paciente or not historia:
         print("No se encontró información del paciente o su historia clínica.")
@@ -102,7 +113,8 @@ def generar_factura(cedula_paciente):
 
     print("\n------- Facturación -------")
     print(f"Nombre del paciente: {paciente['nombre']}")
-    print(f"Edad: {paciente['edad']}")
+    edad = calcular_edad(paciente['fecha_nacimiento'])
+    print(f"Edad: {edad}")
     print(f"Cédula: {cedula_paciente}")
     # Tomando la última consulta del paciente como referencia
     ultima_consulta = list(historia.values())[-1]
@@ -139,10 +151,6 @@ def generar_factura(cedula_paciente):
         print(f"\nTotal a pagar por el paciente: ${total}")
 
     print("-----------------------------")
-
-# Para probar la función, puedes llamar:
-# generar_factura('cedula_del_paciente')
-
 
 def menu_administrativo():
     pacientes = []

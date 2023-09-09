@@ -18,7 +18,11 @@ def medico_existe(cedula):
     return False
 
 def paciente_existe(cedula):
-    return cedula in [paciente['cedula'] for paciente in pa.paciente]
+    try:
+        return cedula in [pacientes['cedula'] for pacientes in pa.pacientes]
+    except Exception as e:
+        print(f"Ocurrió un error: {e}")
+        return False
 
 def desplegar_menu_acciones():
     opciones = ["Medicamentos", "Procedimientos", "Ayuda Diagnóstica", "Salir"]
