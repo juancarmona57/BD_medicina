@@ -96,12 +96,10 @@ def agendar_cita(pacientes):
 
     return nueva_cita
 def obtener_info_paciente(cedula_paciente, lista_pacientes):
-    # Retorna la información del paciente basada en su cédula
     return next((paciente for paciente in lista_pacientes if paciente["cedula"] == cedula_paciente), None)
 
 
 def obtener_historia_clinica(cedula_paciente):
-    # Esta función retorna la historia clínica basada en la cédula del paciente
     return me.historia_clinica_db.get(cedula_paciente, {})
 
 def generar_factura(cedula_paciente):
@@ -118,10 +116,10 @@ def generar_factura(cedula_paciente):
     print(f"Cédula: {cedula_paciente}")
     # Tomando la última consulta del paciente como referencia
     ultima_consulta = list(historia.values())[-1]
-    print(f"Nombre del médico tratante: {ultima_consulta['cedula_medico']}")  # Aquí deberíamos traducir la cédula a nombre usando un DB adecuado
-    print(f"Nombre de la compañía de seguro: {paciente['compania_seguro']}")
+    print(f"Nombre del médico tratante: {ultima_consulta['cedula_medico']}")  
+    print(f"Nombre de la compañía de seguro: {paciente['nombre_compania_seguros']}")
     print(f"Numero de póliza: {paciente['numero_poliza']}")
-    print(f"Vigencia de la póliza: {'Activa' if paciente['poliza_activa'] else 'Inactiva'}")
+    print(f"Vigencia de la póliza: {'Activa' if paciente['estado_poliza'] else 'Inactiva'}")
 
     # Calcular y desglosar costos
     total = 0
@@ -137,7 +135,6 @@ def generar_factura(cedula_paciente):
                     if proc["numero_orden"] == orden["numero_orden"]:
                         print(f"Procedimiento: {proc['nombre_procedimiento']} - Costo: ${proc['costo']}")
                         total += int(proc["costo"])
-            # Agregar condición para ayuda diagnóstica si se implementa
 
     if paciente['poliza_activa']:
         total_copagos = COPAGO * len(historia)
